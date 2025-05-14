@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Buy $FCAI Tokens</title>
+  <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+</head>
+<body>
+  <h2>Buy $FCAI Tokens with Phantom Wallet</h2>
+  <button onclick="connectWallet()">Connect Wallet</button>
+  <button onclick="buyFCAI()">Buy for 1 SOL</button>
+
+  <script>
+    const receiverAddress = new solanaWeb3.PublicKey("YOUR_SOLANA_RECEIVE_ADDRESS");
+
+    async function connectWallet() {
+      if ("solana" in window) {
+        const provider = window.solana;
+        await provider.connect();
+        window.userPublicKey = provider.publicKey;
+        alert("Connected: " + provider.publicKey.toString());
+      } else {
+        alert("Please install Phantom Wallet from https://phantom.app");
+      }
+    }
+
+    async function buyFCAI() {
+      const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl("mainnet-beta"));
+      const provider = window.solana;
+
+      const transaction = new solanaWeb3.Transaction().add(
+        solanaWeb3.SystemProgram.transfer({
+          fromPubkey: provider.publicKey,
+          toPubkey: receiverAddress,
+          lamports: solanaWeb3.LAMPORTS_PER_SOL * 1
+        })
+      );
+
+      transaction.feePayer = provider.publicKey;
+      transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+
+      const signed = await provider.signTransaction(transaction);
+      const signature = await connection.sendRawTransaction(signed.serialize());
+      await connection.confirmTransaction(signature);
+
+      alert("Payment sent! TX: " + signature);
+    }
+  </script>
+</body>
+</html>
